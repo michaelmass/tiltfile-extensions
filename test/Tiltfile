@@ -29,3 +29,5 @@ expect(set_mode({}, 'noop'), ['noop'])
 ## Test dict_merge
 expect(dict_merge({ 'a': 1 }, { 'b': 2 }), { 'a': 1, 'b': 2 })
 expect(dict_merge({ 'a': 1 }, { 'a': 2 }), { 'a': 2 })
+
+print('All tests passed!')
