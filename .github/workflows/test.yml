@@ -2,7 +2,8 @@ name: Test
 
 on:
   workflow_dispatch:
-  push:
+  pull_request:
+    types: [opened, synchronize]
     branches: [master]
 
 jobs:
