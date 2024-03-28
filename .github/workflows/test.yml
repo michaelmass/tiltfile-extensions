@@ -1,0 +1,16 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: michaelmass/actions/tilt-setup@master
+      - working-directory: test
+        run: tilt ci
