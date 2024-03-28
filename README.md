@@ -7,7 +7,7 @@ In your Tiltfile, download the tiltfile using `curl` then use `load` or `include
 
 ```python
 if not os.path.exists('extension_tiltfile'):
-  local('curl https://raw.githubusercontent.com/botpress/tilt-extensions/mm-extensions/commons/Tiltfile > extension_tiltfile', quiet=True)
+  local('curl https://raw.githubusercontent.com/michaelmass/tilt-extensions/Tiltfile > extension_tiltfile', quiet=True)
 
 load('./extension_tiltfile', 'dotenv_watch')
 
@@ -26,6 +26,22 @@ The `dotenv_watch` function watches for changes on the `.env` file and reloads t
 load('./extension_tiltfile', 'dotenv_watch')
 
 dotenv_watch()
+```
+
+### define_config
+
+The `define_config` function allows you to define a configuration settings that is easier to setup. It loads the configuration from the config file, environment variables and uses a default values.
+
+```python
+load('./extension_tiltfile', 'define_config')
+
+# Define a setting called `environment_var` with a default value of `DEV`.
+# This setting can be loaded from the environment variable `ENVIRONMENT_VAR` or the file `tilt_config.json`.
+get_environment_var = define_config(key="environment_var", default="DEV", type='string', required=True)
+
+cfg = config.parse()
+
+environment_var = get_environment_var(cfg) # Get the value of the configuration setting `environment_var`
 ```
 
 ## Notes
