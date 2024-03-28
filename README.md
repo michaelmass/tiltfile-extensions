@@ -7,7 +7,7 @@ In your Tiltfile, download the tiltfile using `curl` then use `load` or `include
 
 ```python
 if not os.path.exists('extension_tiltfile'):
-  local('curl https://raw.githubusercontent.com/michaelmass/tilt-extensions/Tiltfile > extension_tiltfile', quiet=True)
+  local('curl https://raw.githubusercontent.com/michaelmass/tiltfile-extensions/master/Tiltfile > extension_tiltfile', quiet=True)
 
 load('./extension_tiltfile', 'dotenv_watch')
 
