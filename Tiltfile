@@ -98,3 +98,87 @@ def string_to_bool(value):
 
 def write_file(filename, content):
   local('echo "$DATA_CONTENT" > %s' % filename, quiet=True, env={'DATA_CONTENT': content})
+
+def postgres_uri(username='postgres', password='admin', port=5432, database='postgres', host='localhost'):
+  return 'postgres://%s:%s@%s:%s/%s' % (username, password, host, port, database)
+
+def redis_uri(password='admin', port=6379, host='localhost'):
+  return 'redis://:%s@%s:%s' % (password, host, port)
+
+def dict_omit(d, keys):
+  return { k: v for k, v in d.items() if k not in keys }
+
+def docker_resource(
+  name=None,
+  labels=[],
+  build=None,
+  image=None,
+  entrypoint=None,
+  command=None,
+  ports=[],
+  environment={},
+  docker_deps=[],
+  extra={},
+):
+  """Create a docker resource.
+
+  The resource still need to be passed down to the docker_compose_resources function to be used.
+
+  ```
+  docker_res = docker_resource(
+    name='hellomicro',
+    labels=['services'],
+    build={ context: 'path/to/context', dockerfile: 'path/to/Dockerfile' },
+    image='michaelmass/hellomicro:latest',
+    entrypoint=['/bin/sh', '-c'],
+    command=['echo', 'Hello World'],
+    ports=[{ host: 8080, container: 80 }],
+    environment={'HELLO': 'world'},
+    docker_deps=['db'],
+    extra={'volumes': ['./data:/data']},
+  )
+
+  docker_compose_resources([docker_res])
+  ```
+
+  Args:
+    name: the name of the resource `hellomicro`
+    labels: labels to set on the resource `['services']`
+    build: a build context for the docker image `{ context: 'path/to/context', dockerfile: 'path/to/Dockerfile' }`
+    image: the docker image to use `michaelmass/hellomicro:latest`
+    entrypoint: the entrypoint for the container `['/bin/sh', '-c']`
+    command: the command to run in the container `['echo', 'Hello World']`
+    ports: ports to expose on the container. `[{ host: 8080, container: 80 }]`
+    environment: environment variables to set in the container `{'HELLO': 'world'}`
+    docker_deps: list of docker resources that this resource depends on `['db']`
+    extra: extra docker-compose options to set on the resource `{'volumes': ['./data:/data']}`
+
+  Returns:
+    docker resource object
+  """
+  resource = {
+    'name': name,
+    'depends_on': docker_deps,
+    'restart': 'always',
+    'image': image,
+    'command': command,
+    'entrypoint': entrypoint,
+    'ports': [('%s:%s' % (port['host'], port['container'])) for port in ports],
+    'environment': environment,
+    'labels': labels,
+  }
+
+  if build:
+    resource['build'] = build
+
+  return dict_merge(resource, extra)
+
+def docker_compose_resources(services=[]):
+  docker_compose(encode_yaml({
+    'version': '3.5',
+    'services': { r['name']: dict_omit(r, ['name']) for r in services },
+  }))
+
+  for service in services:
+    dc_resource(name=service['name'], labels=service['labels'])
+
