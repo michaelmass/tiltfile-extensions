@@ -190,3 +190,6 @@ def open(name, urls, deps, labels):
     labels=labels,
     resource_deps=deps,
   )
+
+def default_settings():
+  update_settings(max_parallel_updates=9999)
