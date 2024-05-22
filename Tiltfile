@@ -182,3 +182,14 @@ def docker_compose_resources(services=[]):
   for service in services:
     dc_resource(name=service['name'], labels=service['labels'])
 
+def open(name, urls, deps, labels):
+  cmd = 'start' if (os.name == 'nt') else 'open'
+  local_resource(
+    name=name,
+    cmd=(';'.join(['%s %s' % (cmd, url) for url in urls])),
+    labels=labels,
+    resource_deps=deps,
+  )
+
+def default_settings():
+  update_settings(max_parallel_updates=9999)
