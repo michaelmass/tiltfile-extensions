@@ -193,3 +193,36 @@ def open(name, urls, deps, labels):
 
 def default_settings():
   update_settings(max_parallel_updates=9999)
+
+def resource(
+  name,
+  allow_parallel=True,
+  env={},
+  labels=[],
+  cmd=None,
+  dir=None,
+  serve_cmd=None,
+  serve_dir=None,
+  serve_env=None,
+  watch_dir=[],
+  resource_deps=[],
+  links=[],
+  manual=False,
+  readiness_probe=None,
+):
+  local_resource(
+    name=name,
+    cmd=cmd,
+    allow_parallel=allow_parallel,
+    labels=labels,
+    env=env,
+    dir=dir,
+    serve_cmd=serve_cmd,
+    serve_dir=(serve_dir if serve_dir else dir),
+    serve_env=(serve_env if serve_env else env),
+    resource_deps=resource_deps,
+    deps=watch_dir,
+    links=links,
+    auto_init=(not manual),
+    readiness_probe=readiness_probe,
+  )

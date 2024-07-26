@@ -3,6 +3,7 @@ load('../Tiltfile', 'bool_to_string')
 load('../Tiltfile', 'default_resources')
 load('../Tiltfile', 'set_mode')
 load('../Tiltfile', 'dict_merge')
+load('../Tiltfile', 'docker_resource')
 
 default_resources()
 
@@ -29,5 +30,24 @@ expect(set_mode({}, 'noop'), ['noop'])
 ## Test dict_merge
 expect(dict_merge({ 'a': 1 }, { 'b': 2 }), { 'a': 1, 'b': 2 })
 expect(dict_merge({ 'a': 1 }, { 'a': 2 }), { 'a': 2 })
+
+## Test docker resource
+resource = docker_resource(
+  name='test',
+  image='alpine',
+  ports=[{ 'host': 8080, 'container': 80 }],
+)
+
+expect(resource, {
+  "name": "test",
+  "depends_on": [],
+  "restart": "always",
+  "image": "alpine",
+  "command": None,
+  "entrypoint": None,
+  "ports": ["8080:80"],
+  "environment": {},
+  "labels": []
+})
 
 print('All tests passed!')
