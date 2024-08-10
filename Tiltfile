@@ -110,7 +110,7 @@ def dict_omit(d, keys):
 
 def docker_resource(
   name=None,
-  labels=[],
+  labels=['docker'],
   build=None,
   image=None,
   entrypoint=None,
@@ -182,15 +182,6 @@ def docker_compose_resources(services=[]):
   for service in services:
     dc_resource(name=service['name'], labels=service['labels'])
 
-def open(name, urls, deps, labels):
-  cmd = 'start' if (os.name == 'nt') else 'open'
-  local_resource(
-    name=name,
-    cmd=(';'.join(['%s %s' % (cmd, url) for url in urls])),
-    labels=labels,
-    resource_deps=deps,
-  )
-
 def default_settings():
   update_settings(max_parallel_updates=9999)
 
@@ -198,17 +189,19 @@ def resource(
   name,
   allow_parallel=True,
   env={},
-  labels=[],
-  cmd=None,
-  dir=None,
-  serve_cmd=None,
-  serve_dir=None,
-  serve_env=None,
+  labels=['apps'],
+  cmd='',
+  dir='',
+  serve_cmd='',
+  serve_dir='',
+  serve_env='',
   watch_dir=[],
   resource_deps=[],
   links=[],
   manual=False,
-  readiness_probe=None,
+  open_url='/',
+  port=None,
+  health_path=None,
 ):
   local_resource(
     name=name,
@@ -222,7 +215,20 @@ def resource(
     serve_env=(serve_env if serve_env else env),
     resource_deps=resource_deps,
     deps=watch_dir,
-    links=links,
+    links=(links + (['http://localhost:%s' % port] if port else [])),
     auto_init=(not manual),
-    readiness_probe=readiness_probe,
+    readiness_probe=(probe(http_get=http_get_action(port=port, path=health_path), period_secs=1, failure_threshold=10) if health_path else None),
+  )
+
+  if (port and open_url):
+    open(name='open-%s' % name, urls=['http://localhost:%s%s' % (port, open_url)], deps=[name])
+
+def open(name, urls, deps, labels=['open']):
+  cmd = 'start' if (os.name == 'nt') else 'open'
+  local_resource(
+    name=name,
+    cmd=(';'.join(['%s %s' % (cmd, url) for url in urls])),
+    labels=labels,
+    resource_deps=deps,
+    allow_parallel=True,
   )
