@@ -175,7 +175,6 @@ def docker_resource(
 
 def docker_compose_resources(services=[]):
   docker_compose(encode_yaml({
-    'version': '3.5',
     'services': { r['name']: dict_omit(r, ['name']) for r in services },
   }))
 
