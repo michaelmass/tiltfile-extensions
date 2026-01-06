@@ -202,22 +202,34 @@ def resource(
   port=None,
   health_path=None,
 ):
-  local_resource(
-    name=name,
-    cmd=cmd,
-    allow_parallel=allow_parallel,
-    labels=labels,
-    env=env,
-    dir=dir,
-    serve_cmd=serve_cmd,
-    serve_dir=(serve_dir if serve_dir else dir),
-    serve_env=(serve_env if serve_env else env),
-    resource_deps=resource_deps,
-    deps=watch_dir,
-    links=(links + (['http://localhost:%s' % port] if port else [])),
-    auto_init=(not manual),
-    readiness_probe=(probe(http_get=http_get_action(port=port, path=health_path), period_secs=1, failure_threshold=10) if health_path else None),
-  )
+  res = {
+    'name': name,
+    'cmd': cmd,
+    'allow_parallel': allow_parallel,
+    'labels': labels,
+    'serve_cmd': serve_cmd,
+    'resource_deps': resource_deps,
+    'deps': watch_dir,
+    'links': (links + (['http://localhost:%s' % port] if port else [])),
+    'auto_init': (not manual),
+    'readiness_probe': (probe(http_get=http_get_action(port=port, path=health_path), period_secs=1, failure_threshold=10) if health_path else None),
+  }
+
+  if cmd:
+    res['dir'] = dir
+    res['env'] = env
+
+  if (serve_dir):
+    res['serve_dir'] = serve_dir
+  elif (serve_cmd):
+    res['serve_dir'] = dir
+
+  if (serve_env):
+    res['serve_env'] = serve_env
+  elif (serve_cmd):
+    res['serve_env'] = env
+
+  local_resource(**res)
 
   if (port and open_url):
     open(name='open-%s' % name, urls=['http://localhost:%s%s' % (port, open_url)], deps=[name])
