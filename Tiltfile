@@ -200,8 +200,11 @@ def resource(
   manual=False,
   open_url='/',
   port=None,
+  host=None,
   health_path=None,
 ):
+  hostname = host if host else 'localhost'
+
   res = {
     'name': name,
     'cmd': cmd,
@@ -210,7 +213,7 @@ def resource(
     'serve_cmd': serve_cmd,
     'resource_deps': resource_deps,
     'deps': watch_dir,
-    'links': (links + (['http://localhost:%s' % port] if port else [])),
+    'links': (links + (['http://%s:%s' % (hostname, port)] if port else [])),
     'auto_init': (not manual),
     'readiness_probe': (probe(http_get=http_get_action(port=port, path=health_path), period_secs=1, failure_threshold=10) if health_path else None),
   }
@@ -232,7 +235,7 @@ def resource(
   local_resource(**res)
 
   if (port and open_url):
-    open(name='open-%s' % name, urls=['http://localhost:%s%s' % (port, open_url)], deps=[name])
+    open(name='open-%s' % name, urls=['http://%s:%s%s' % (hostname, port, open_url)], deps=[name])
 
 def open(name, urls, deps, labels=['open']):
   cmd = 'start' if (os.name == 'nt') else 'open'
