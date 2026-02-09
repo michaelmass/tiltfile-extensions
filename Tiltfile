@@ -173,10 +173,13 @@ def docker_resource(
 
   return dict_merge(resource, extra)
 
-def docker_compose_resources(services=[]):
-  docker_compose(encode_yaml({
+def docker_compose_resources(
+  services=[],
+  extra={},
+):
+  docker_compose(encode_yaml(dict_merge({
     'services': { r['name']: dict_omit(r, ['name']) for r in services },
-  }))
+  }, extra)))
 
   for service in services:
     dc_resource(name=service['name'], labels=service['labels'])
