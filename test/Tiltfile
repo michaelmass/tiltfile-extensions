@@ -47,7 +47,7 @@ expect(resource, {
   "entrypoint": None,
   "ports": ["8080:80"],
   "environment": {},
-  "labels": []
+  "labels": ["docker"]
 })
 
 print('All tests passed!')
