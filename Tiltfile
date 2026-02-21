@@ -238,7 +238,8 @@ def resource(
   local_resource(**res)
 
   if (port and open_url):
-    open(name='open-%s' % name, urls=['http://%s:%s%s' % (hostname, port, open_url)], deps=[name])
+    path = open_url if type(open_url) == 'string' else '/'
+    open(name='open-%s' % name, urls=['http://%s:%s%s' % (hostname, port, path)], deps=[name])
 
 def open(name, urls, deps, labels=['open']):
   cmd = 'start' if (os.name == 'nt') else 'open'
