@@ -250,3 +250,95 @@ def open(name, urls, deps, labels=['open']):
     resource_deps=deps,
     allow_parallel=True,
   )
+
+def service(
+  name,
+  database_url,
+  port,
+  env={},
+  dir='',
+  resource_deps=[],
+  disable_browser=True,
+  enable_prisma=True,
+  disable_test=False,
+  disable_studio=False,
+):
+  """
+  Registers a packages/<name> service with Tilt, plus optional Prisma migrate/generate/studio
+  resources and an e2e test resource. Prisma Studio binds to port+1.
+
+  Args:
+    name:            base name for all resources; also used as the default package directory.
+    database_url:    value passed as DATABASE_URL to the service and Prisma resources.
+    port:            port the service listens on; prisma studio uses port+1.
+    env:             extra env vars merged into the service environment (overrides defaults).
+    dir:             working directory for all resources; defaults to packages/<name> when empty.
+    resource_deps:   dependencies for the prisma-migrate step.
+    disable_browser: when True, do not auto-open Prisma Studio in the browser.
+    enable_prisma:   when True, register prisma-migrate, prisma-generate, and (optionally) prisma-studio.
+    disable_test:    when True, skip the <name>-test e2e resource.
+    disable_studio:  when True, skip the <name>-prisma-studio resource (only relevant if enable_prisma).
+  """
+  directory = dir if dir else 'packages/%s' % name
+
+  if enable_prisma:
+    prisma_studio_port = (port + 1)
+
+    resource(
+      name='%s-prisma-migrate' % name,
+      cmd='pnpm migrate',
+      dir=directory,
+      env={
+        'DATABASE_URL': database_url,
+      },
+      labels=[name],
+      resource_deps=resource_deps,
+    )
+
+    if not disable_studio:
+      resource(
+        name='%s-prisma-studio' % name,
+        serve_cmd='pnpm prisma:studio --port %s' % (prisma_studio_port),
+        dir=directory,
+        port=prisma_studio_port,
+        open_url=(not disable_browser),
+        health_path='/',
+        env={
+          'DATABASE_URL': database_url,
+        },
+        labels=[name],
+        resource_deps=['install'],
+      )
+
+    resource(
+      name='%s-prisma-generate' % name,
+      cmd='pnpm generate',
+      dir=directory,
+      env={
+        'DATABASE_URL': database_url,
+      },
+      labels=[name],
+      resource_deps=['install'],
+    )
+
+  resource(
+    name=name,
+    dir=directory,
+    serve_cmd='pnpm start',
+    env=dict_merge({
+      'DATABASE_URL': database_url,
+      'PORT': '%s' % port,
+      'BASE_URL': 'http://%s.localtest.me' % name,
+    }, env),
+    labels=['services'],
+    resource_deps=['install'],
+  )
+
+  if not disable_test:
+    resource(
+      name='%s-test' % name,
+      dir=directory,
+      cmd='pnpm test:e2e',
+      labels=[name],
+      resource_deps=['install', name],
+    )
