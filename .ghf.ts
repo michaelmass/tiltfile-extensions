@@ -1,3 +1,5 @@
-import type { Config } from './.ghf.type'
+import type { Config } from './.ghf.type.ts'
 
-export default {} satisfies Config
+export default {
+  extends: ['@ghf/default.json'],
+} satisfies Config
